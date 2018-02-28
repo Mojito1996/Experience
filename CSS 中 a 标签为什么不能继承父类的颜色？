@@ -1,0 +1,9 @@
+<div>
+hello world 
+<a href="#">HELLO WORLD!</a>
+</div>
+下面是css样式
+div{ color:red;}
+如果是这样的样式，那hello world显示的是红色，而HELLO WORLD显示的是系统默认的状态即蓝色
+a标签有系统默认的样式会覆盖设置的div设置的样式
+如果需要a继承父级样式，可以对标签a设置样式或者让a继承父级样式a{color:inherit;}
