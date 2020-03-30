@@ -39,7 +39,7 @@ var pageColHTML = `
                     </div>
                 `
                 
-                
+  // 核心函数        
   function initPage() {
         askNum++
         var pageNum = pageList.length
@@ -52,6 +52,7 @@ var pageColHTML = `
         innerPage(needRowNum, existRowNum=existRowNumber, existPage)
         existPage = []
     }
+    // 下面这个函数使用了递归
     function innerPage(needRowNum, existRowNum, existPage) {
         if(existRowNum < needRowNum) {
             if (existRowNum === 0) {
