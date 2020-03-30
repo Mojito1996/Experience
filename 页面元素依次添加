@@ -1,0 +1,124 @@
+最近写项目遇到卡片式布局，数据是动态获取的所以卡片布局会有一个动态的变化，需要依次往前添加，横向排列，例如三个一行。
+本来这个可以直接用栅格很简单就实现，先添加一个Row，然后一个元素一个col往里面堆，毕竟栅格可以自动计算，一行放不下会另起一行。
+但是因为自己有点时间，于是便想必须按照一个row里面只能装三个col，一个row装满了再添加一个row，然后再往里加col。写了一个函数下面是代码
+
+var existRowNumber = 0 //已存在的row数
+var existPage = [].concat(pageList) // 已经存在的col数，这个变量是从接口请求的总的数据复制的，后面页面里的col就从这个变量里面取
+var askNum = 0 // 请求的次数
+// pageColHTML col的内容
+var pageColHTML = `
+                    <div class="col-sm-4">
+                        <div class="ibox">
+                            <div class="ibox-title page-ibox-title">
+                                <i class="fa fa-qrcode qrCode-tips pull-left"></i>
+                                <div class="btn-group pull-right page-btn-group">
+                                    <button data-toggle="dropdown" class="btn btn-sm btn-white dropdown-toggle">操作 <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="javascript:void(0);" onclick="enable()">启用</a>
+                                        </li>
+                                        <li><a href="javascript:void(0);" onclick="disable()">禁用</a>
+                                        </li>
+                                        <li><a href="javascript:void(0);" onclick="editPage()">编辑</a>
+                                        </li>
+                                        <li><a href="javascript:void(0);" onclick="copyPage()">复制</a>
+                                        </li>
+                                        <li><a href="javascript:void(0);" onclick="deletePage()">删除</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <h5>page_name</h5>
+                            </div>
+                            <div class="ibox-content page-ibox-content">
+                                <div class="page-icon">
+                                    <img src="page_icon" alt="">
+                                </div>
+                                <div class="page-status-tip page-status-open">page_status</div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                
+                
+  function initPage() {
+        askNum++
+        var pageNum = pageList.length
+        var needRowNum = 0
+        if(Math.round(pageNum / 3) === pageNum / 3) {
+            needRowNum = pageNum / 3
+        } else {
+            needRowNum = Math.ceil(pageNum / 3)
+        }
+        innerPage(needRowNum, existRowNum=existRowNumber, existPage)
+        existPage = []
+    }
+    function innerPage(needRowNum, existRowNum, existPage) {
+        if(existRowNum < needRowNum) {
+            if (existRowNum === 0) {
+                existRowNum++
+                appendPageRow(existRowNum, existPage)
+            } else {
+                if($('#pageRow' + existRowNum).children().length === 3) {
+                    existRowNum++
+                    appendPageRow(existRowNum, existPage)
+                } else {
+                    var blankPlace = 3 - $('#pageRow' + existRowNum).children().length
+                    existPage.forEach((i, index)=> {
+                        if (index < blankPlace) {
+                            var htmlContent = pageColHTML.replace('page_status',i.status==0?'禁用':'启用').replace('page_name',i.name).replace('page_icon', i.icon)
+                                .replace('enable()', `enable(${i.id})`).replace('disable()', `disable(${i.id})`)
+                                .replace('editPage()', `editPage(${i.id})`).replace('copyPage()', `copyPage(${i.id})`)
+                                .replace('deletePage()', `deletePage(${i.id})`)
+                            if(i.status == 0) {
+                                htmlContent = htmlContent.replace('page-status-open', 'page-status-close')
+                            }
+                            $('#pageRow'+existRowNum).append(htmlContent)
+                        }
+                    })
+                    existPage.splice(0, blankPlace)
+                }
+            }
+            existRowNumber = existRowNum
+            innerPage(needRowNum, existRowNum, existPage)
+        }
+        if(existRowNum === needRowNum && askNum > 1) {
+            existPage.forEach((i, index)=> {
+                if (index < 3) {
+                    var htmlContent = pageColHTML.replace('page_status',i.status==0?'禁用':'启用').replace('page_name',i.name).replace('page_icon', i.icon)
+                        .replace('enable()', `enable(${i.id})`).replace('disable()', `disable(${i.id})`)
+                        .replace('editPage()', `editPage(${i.id})`).replace('copyPage()', `copyPage(${i.id})`)
+                        .replace('deletePage()', `deletePage(${i.id})`)
+                    if(i.status == 0) {
+                        htmlContent = htmlContent.replace('page-status-open', 'page-status-close')
+                    }
+                    $('#pageRow'+existRowNum).append(htmlContent)
+                }
+            })
+        }
+    }
+    
+    // 下拉刷新
+    $(function () {
+        $(window).scroll(function () {
+            var scrollBarToPageTopHeight = $(document).scrollTop()
+            var pageHeight = $(document).height()
+            var visibleWindowHeight = $(window).height()
+            console.log(scrollBarToPageTopHeight, pageHeight, visibleWindowHeight, pageHeight - visibleWindowHeight)
+            if(pageHeight - visibleWindowHeight <= Math.ceil(scrollBarToPageTopHeight)) {
+                var loadingIndex = layer.load(1, {shade: [0.1, '#fff']})
+                setTimeout(function () {
+                    layer.close(loadingIndex)
+                    addData()
+                }, 1000)
+            }
+        })
+    })
+    
+    //添加元素的函数
+    function addData() {
+        // newAskData 新请求的值
+        var newAskData = [{id:Math.random(),name:'测试数据',status: 1,icon: '/img/project/page_demo.png'}]
+        pageList.push(newAskData)
+        existPage = [].concat(newAskData)
+        initPage()
+    }
