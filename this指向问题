@@ -6,23 +6,34 @@ this指向的一般说是当前函数的运行环境，但是我觉得也可以�
 ps:实际上，箭头函数没有this，它的this是捕获定义位置（所在上下文）的this来的，与其保持一致，与函数执行的位置无关
 
 var f4 = () => {console.log(this)}
+var f5 = () => {console.log(this)}
 var obj = {
   f1: function(){
     f4()
   },
   f2: ()=>{console.log(this)},
-  f3: f4,
+  f3: f5,
+  f6: function() {
+    (()=>{console.log(this)})()
+  },
+  f7: function() {
+    function(){console.log(this)}() 
+  }
 }
 var func = obj.f1
 obj.f1() 
 func()
-// obj.f1()可以转换为obj.f1.call(obj) 即最后f1是在obj环境下运行的;
-// 函数的执行如果能转换成call()的方式，就可以根据call的第一个参数来查看this的指向，但f1里的f4，这种就转不了，
-// 是“xxx()”这种执行方式，因为没有指定的执行对象，所以默认f4是在window环境下执行，其this就代表window;
+// obj.f7()可以转换为obj.f7.call(obj) 即最后f7是在obj环境下运行的;
+// 函数的执行如果能转换成call()的方式，就可以根据call的第一个参数来查看this的指向，但f7里的匿名函数，这种就转不了，
+// 是“xxx()”这种执行方式，因为没有指定的执行对象，所以f7里的函数默认是在window环境下执行，其this就代表window;
 // 以obj.f1()为例，f4是定义在全局环境中也就window下，箭头函数的this来源于定义的位置的this，所以f4的this是window
 
 obj.f2()
 obj.f3()
-// f2、f3都有有个箭头函数，其this为定义时所在上下文的this，与执行位置无关，虽然它们的箭头函数定义位置不同，f2的定义在obj里面，f3的定义在window下，但是obj的this指向window，所以它们输出结果一样
-// f5里的箭头函数
+obj.f6()
+// 两个箭头函数，定义位置不一样其this指向不一定不一样，但定义位置一样其this指向一定一样，箭头函数的this指向与执行位置无关
+// f2、f3都有有个箭头函数，f2的定义在obj里面，f3的定义在window下，但是obj的this指向window，所以它们输出结果一样
+// f1、f3它们的箭头函数定义位置一样，但执行位置不一样，但是最后箭头函数的指向都是window
+// f1、f6执行位置一样但定义位置不一样，结果各自箭头函数的指向不一样，前一个指向window，后一个指向obj
 
+// 总结，箭头函数的this来源于其所在上下文的this，与其一致；普通函数的this由执行环境而定例如有点执行的就是点前面的一个，没有点直接是xxx()的就是window。
